@@ -1,0 +1,8 @@
+# Codex Maintenance local configuration example
+# Copy to CodexMaintenance.config or run:
+#   CodexMaintenance.exe --configure
+
+CodexHome=%USERPROFILE%\.codex
+BackupRoot=%LOCALAPPDATA%\CodexMaintenance\backups
+KeepBackups=5
+VacuumThresholdMb=20.0

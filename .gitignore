@@ -1,0 +1,10 @@
+bin/
+obj/
+*.exe
+*.pdb
+*.user
+*.suo
+CodexMaintenance.config
+CodexMaintenance.settings.txt
+maintenance_backups/
+backups/
