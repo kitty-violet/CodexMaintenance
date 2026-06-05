@@ -12,7 +12,7 @@ namespace CodexMaintenance
     {
         private const string AppName = "Codex Maintenance";
 
-        private const string Version = "1.0.2";
+        private const string Version = "1.1.2";
         private const string SettingsFileName = "CodexMaintenance.config";
         private const string DefaultProxy = "http://127.0.0.1:7890";
         private const int DefaultKeepBackups = 5;
@@ -558,7 +558,7 @@ namespace CodexMaintenance
 
         private static string NormalizePath(string path)
         {
-            return Path.GetFullPath(Environment.ExpandEnvironmentVariables(path));
+            return Path.GetFullPath(Environment.ExpandEnvironmentVariables(path.Trim().Trim('"')));
         }
 
         private static double FileSizeMb(string path)
@@ -734,6 +734,12 @@ namespace CodexMaintenance
                 return settings;
             }
 
+            var baseDirectory = Path.GetDirectoryName(Path.GetFullPath(path));
+            if (string.IsNullOrWhiteSpace(baseDirectory))
+            {
+                baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            }
+
             foreach (var rawLine in File.ReadAllLines(path))
             {
                 var line = rawLine.Trim();
@@ -753,11 +759,11 @@ namespace CodexMaintenance
 
                 if (string.Equals(key, "CodexHome", StringComparison.OrdinalIgnoreCase))
                 {
-                    settings.CodexHome = Expand(value);
+                    settings.CodexHome = Expand(value, baseDirectory);
                 }
                 else if (string.Equals(key, "BackupRoot", StringComparison.OrdinalIgnoreCase))
                 {
-                    settings.BackupRoot = Expand(value);
+                    settings.BackupRoot = Expand(value, baseDirectory);
                 }
                 else if (string.Equals(key, "KeepBackups", StringComparison.OrdinalIgnoreCase))
                 {
@@ -800,9 +806,14 @@ namespace CodexMaintenance
             File.WriteAllLines(path, lines, Encoding.UTF8);
         }
 
-        private static string Expand(string value)
+        private static string Expand(string value, string baseDirectory)
         {
-            return Path.GetFullPath(Environment.ExpandEnvironmentVariables(value.Trim().Trim('"')));
+            var expanded = Environment.ExpandEnvironmentVariables(value.Trim().Trim('"'));
+            if (Path.IsPathRooted(expanded))
+            {
+                return Path.GetFullPath(expanded);
+            }
+            return Path.GetFullPath(Path.Combine(baseDirectory, expanded));
         }
     }
 }

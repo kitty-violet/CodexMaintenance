@@ -5,6 +5,7 @@ $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 & (Join-Path $root "scripts\smoke-test.ps1")
 
 $exe = Join-Path $root "bin\CodexMaintenance.exe"
+$guiExe = Join-Path $root "bin\CodexMaintenanceGui.exe"
 $versionLine = & $exe --version
 if (-not ($versionLine -match "(\d+\.\d+\.\d+)")) {
     throw "Could not determine version from: $versionLine"
@@ -35,6 +36,8 @@ foreach ($file in $files) {
     Copy-Item -LiteralPath (Join-Path $root $file) -Destination (Join-Path $staging $file) -Force
 }
 Copy-Item -LiteralPath $exe -Destination (Join-Path $staging "CodexMaintenance.exe") -Force
+Copy-Item -LiteralPath $guiExe -Destination (Join-Path $staging "CodexMaintenanceGui.exe") -Force
+Copy-Item -LiteralPath (Join-Path $root "assets") -Destination (Join-Path $staging "assets") -Recurse -Force
 Copy-Item -LiteralPath (Join-Path $root "src") -Destination (Join-Path $staging "src") -Recurse -Force
 Copy-Item -LiteralPath (Join-Path $root "docs") -Destination (Join-Path $staging "docs") -Recurse -Force
 Copy-Item -LiteralPath (Join-Path $root "scripts") -Destination (Join-Path $staging "scripts") -Recurse -Force

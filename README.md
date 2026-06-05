@@ -53,7 +53,7 @@ Do not use this tool if you expect it to manage API keys, perform GitHub uploads
 Download the latest release archive:
 
 ```text
-CodexMaintenance-v1.1.1.zip
+CodexMaintenance-v1.1.2.zip
 ```
 
 After extracting it, the folder looks like this:

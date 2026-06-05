@@ -645,13 +645,23 @@ namespace CodexMaintenanceGui
             return exeDirectory;
         }
 
-        private static string ExpandPath(string path)
+        private string ExpandPath(string path)
+        {
+            return ExpandPath(path, configDirectory);
+        }
+
+        private static string ExpandPath(string path, string baseDirectory)
         {
             if (string.IsNullOrWhiteSpace(path))
             {
                 return string.Empty;
             }
-            return Path.GetFullPath(Environment.ExpandEnvironmentVariables(path.Trim().Trim('"')));
+            var expanded = Environment.ExpandEnvironmentVariables(path.Trim().Trim('"'));
+            if (Path.IsPathRooted(expanded))
+            {
+                return Path.GetFullPath(expanded);
+            }
+            return Path.GetFullPath(Path.Combine(baseDirectory, expanded));
         }
     }
 
