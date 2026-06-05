@@ -1,4 +1,4 @@
-# Codex Maintenance
+﻿# Codex Maintenance
 
 A small Windows maintenance utility for local Codex / Codex++ installations.
 
@@ -35,13 +35,28 @@ Download or build `CodexMaintenance.exe`, then run:
 .\CodexMaintenance.exe --configure
 ```
 
-The tool stores local settings next to the executable:
+The tool stores local settings next to the executable, or one directory above when running from a `CodexMaintenance` package folder:
 
 ```text
 CodexMaintenance.config
 ```
 
 That file is intentionally ignored by Git.
+
+## Configuration Example
+
+```text
+CodexHome=%USERPROFILE%\.codex
+BackupRoot=backups
+KeepBackups=5
+VacuumThresholdMb=20.0
+```
+
+`BackupRoot=backups` keeps maintenance backups beside the local config file. You can change it to another drive, for example:
+
+```text
+BackupRoot=D:\CodexMaintenance\backups
+```
 
 ## Usage
 

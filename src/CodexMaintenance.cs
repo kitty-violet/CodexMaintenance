@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -102,10 +102,7 @@ namespace CodexMaintenance
                 string.IsNullOrWhiteSpace(settings.CodexHome) ? defaultCodexHome : settings.CodexHome,
                 true);
 
-            var defaultBackupRoot = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "CodexMaintenance",
-                "backups");
+            var defaultBackupRoot = GetDefaultBackupRoot();
 
             settings.BackupRoot = PromptPath(
                 "Backup folder",
@@ -213,7 +210,7 @@ namespace CodexMaintenance
                 return;
             }
 
-            var output = RunProcess(sqlitePath, Quote(dbPath) + " " + Quote(sql), 120000);
+            var output = RunProcessWithInput(sqlitePath, Quote(dbPath), sql, 120000);
             Console.WriteLine(output.Trim());
 
             var afterMb = FileSizeMb(dbPath);
@@ -367,17 +364,21 @@ namespace CodexMaintenance
             return candidates.FirstOrDefault(File.Exists);
         }
 
-        private static string RunProcess(string fileName, string arguments, int timeoutMs)
+        private static string RunProcessWithInput(string fileName, string arguments, string standardInput, int timeoutMs)
         {
             var psi = new ProcessStartInfo
             {
                 FileName = fileName,
                 Arguments = arguments,
                 UseShellExecute = false,
+                RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 CreateNoWindow = true
             };
+
+            var stdout = new StringBuilder();
+            var stderr = new StringBuilder();
 
             using (var process = Process.Start(psi))
             {
@@ -386,20 +387,40 @@ namespace CodexMaintenance
                     throw new InvalidOperationException("Failed to start process: " + fileName);
                 }
 
-                var stdout = process.StandardOutput.ReadToEnd();
-                var stderr = process.StandardError.ReadToEnd();
+                process.OutputDataReceived += delegate(object sender, DataReceivedEventArgs e)
+                {
+                    if (e.Data != null)
+                    {
+                        stdout.AppendLine(e.Data);
+                    }
+                };
+                process.ErrorDataReceived += delegate(object sender, DataReceivedEventArgs e)
+                {
+                    if (e.Data != null)
+                    {
+                        stderr.AppendLine(e.Data);
+                    }
+                };
+
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
+                process.StandardInput.Write(standardInput);
+                process.StandardInput.Close();
+
                 if (!process.WaitForExit(timeoutMs))
                 {
                     try { process.Kill(); } catch { }
                     throw new TimeoutException(fileName + " timed out.");
                 }
+                process.WaitForExit();
 
                 if (process.ExitCode != 0)
                 {
-                    throw new InvalidOperationException(string.IsNullOrWhiteSpace(stderr) ? stdout : stderr);
+                    var errorText = stderr.ToString();
+                    throw new InvalidOperationException(string.IsNullOrWhiteSpace(errorText) ? stdout.ToString() : errorText);
                 }
 
-                return stdout + stderr;
+                return stdout.ToString() + stderr.ToString();
             }
         }
 
@@ -501,7 +522,25 @@ namespace CodexMaintenance
             var module = Process.GetCurrentProcess().MainModule;
             var exePath = module == null ? null : module.FileName;
             var exeDir = string.IsNullOrWhiteSpace(exePath) ? AppDomain.CurrentDomain.BaseDirectory : Path.GetDirectoryName(exePath);
-            return Path.Combine(exeDir ?? AppDomain.CurrentDomain.BaseDirectory, SettingsFileName);
+            exeDir = exeDir ?? AppDomain.CurrentDomain.BaseDirectory;
+
+            var dirInfo = new DirectoryInfo(exeDir);
+            if (string.Equals(dirInfo.Name, "CodexMaintenance", StringComparison.OrdinalIgnoreCase) && dirInfo.Parent != null)
+            {
+                return Path.Combine(dirInfo.Parent.FullName, SettingsFileName);
+            }
+
+            return Path.Combine(exeDir, SettingsFileName);
+        }
+
+        private static string GetDefaultBackupRoot()
+        {
+            var settingsDir = Path.GetDirectoryName(GetSettingsPath());
+            if (string.IsNullOrWhiteSpace(settingsDir))
+            {
+                settingsDir = AppDomain.CurrentDomain.BaseDirectory;
+            }
+            return Path.Combine(settingsDir, "backups");
         }
 
         private static string NormalizePath(string path)
@@ -746,3 +785,5 @@ namespace CodexMaintenance
         }
     }
 }
+
+

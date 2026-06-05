@@ -1,8 +1,10 @@
-# Codex Maintenance local configuration example
+﻿# Codex Maintenance local configuration example
 # Copy to CodexMaintenance.config or run:
 #   CodexMaintenance.exe --configure
 
 CodexHome=%USERPROFILE%\.codex
-BackupRoot=%LOCALAPPDATA%\CodexMaintenance\backups
+# Default behavior: use a backups folder beside CodexMaintenance.config.
+# You can change this to another drive, for example: D:\CodexMaintenance\backups
+BackupRoot=backups
 KeepBackups=5
 VacuumThresholdMb=20.0
