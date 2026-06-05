@@ -1,9 +1,12 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$src = Join-Path $root "src\CodexMaintenance.cs"
+$srcDir = Join-Path $root "src"
+$cliSrc = Join-Path $srcDir "CodexMaintenance.cs"
+$guiSrc = Join-Path $srcDir "CodexMaintenanceGui.cs"
 $outDir = Join-Path $root "bin"
-$out = Join-Path $outDir "CodexMaintenance.exe"
+$cliOut = Join-Path $outDir "CodexMaintenance.exe"
+$guiOut = Join-Path $outDir "CodexMaintenanceGui.exe"
 
 $candidates = @(
     "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe",
@@ -17,9 +20,18 @@ if (-not $csc) {
 
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 
-& $csc /nologo /optimize+ /target:exe /out:$out $src
+& $csc /nologo /optimize+ /target:exe /out:$cliOut $cliSrc
 if ($LASTEXITCODE -ne 0) {
-    throw "Build failed."
+    throw "CLI build failed."
 }
 
-Write-Host "Built: $out"
+& $csc /nologo /optimize+ /target:winexe /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /out:$guiOut $guiSrc
+if ($LASTEXITCODE -ne 0) {
+    throw "GUI build failed."
+}
+
+Copy-Item -LiteralPath $cliOut -Destination (Join-Path $root "CodexMaintenance.exe") -Force
+Copy-Item -LiteralPath $guiOut -Destination (Join-Path $root "CodexMaintenanceGui.exe") -Force
+
+Write-Host "Built: $cliOut"
+Write-Host "Built: $guiOut"

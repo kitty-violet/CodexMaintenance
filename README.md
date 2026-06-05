@@ -53,13 +53,14 @@ Do not use this tool if you expect it to manage API keys, perform GitHub uploads
 Download the latest release archive:
 
 ```text
-CodexMaintenance-v1.0.2.zip
+CodexMaintenance-v1.1.0.zip
 ```
 
 After extracting it, the folder looks like this:
 
 ```text
 CodexMaintenance/
+  CodexMaintenanceGui.exe
   CodexMaintenance.exe
   CodexMaintenance.config.example
   README.md
@@ -67,8 +68,34 @@ CodexMaintenance/
   build.ps1
   src/
     CodexMaintenance.cs
+    CodexMaintenanceGui.cs
 ```
 
+
+## Recommended: Use the GUI
+
+The latest version includes `CodexMaintenanceGui.exe`. Double-click it to open a normal Windows desktop window instead of typing commands in a terminal.
+
+The GUI lets you:
+
+- choose the `.codex` folder;
+- choose the backup folder;
+- set backup retention;
+- set the `VACUUM` threshold;
+- save configuration;
+- preview cleanup;
+- run cleanup;
+- open the backup folder.
+
+Recommended workflow:
+
+1. Double-click `CodexMaintenanceGui.exe`.
+2. Check the Codex folder and backup folder.
+3. Click `Save`.
+4. Click `Dry Run` first.
+5. If the preview looks right, click `Run Cleanup`.
+
+The GUI calls the same `CodexMaintenance.exe` command-line tool internally, so the maintenance logic is shared between GUI and CLI usage.
 ## First Run
 
 Open PowerShell or CMD in the tool folder:
@@ -77,7 +104,7 @@ Open PowerShell or CMD in the tool folder:
 cd /d <your-tool-folder>\CodexMaintenance
 ```
 
-Run the setup wizard:
+If you prefer the command line, run the setup wizard:
 
 ```powershell
 .\CodexMaintenance.exe --configure
@@ -254,4 +281,6 @@ Public repositories should include source, docs, example config, build scripts, 
 ## License
 
 MIT
+
+
 
