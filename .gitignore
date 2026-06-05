@@ -1,10 +1,16 @@
-bin/
+﻿bin/
 obj/
+artifacts/
 *.exe
 *.pdb
 *.user
 *.suo
+*.zip
 CodexMaintenance.config
 CodexMaintenance.settings.txt
+CodexMaintenance-menu.local.cmd
 maintenance_backups/
 backups/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm

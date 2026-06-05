@@ -2,13 +2,13 @@
 
 A small Windows maintenance utility for local Codex / Codex++ installations.
 
-It helps keep startup fast by safely backing up and trimming noisy local log data. It is designed to be portable: users choose their own `.codex` folder and backup folder on first run, and no personal paths are stored in source code.
+It helps keep startup fast by safely backing up and trimming noisy local log data. It is designed to be portable: users choose their own `.codex` folder and backup folder, and no personal paths are stored in source code.
 
 ## Features
 
 - First-run setup wizard for:
   - Codex data folder, usually `%USERPROFILE%\.codex`
-  - Maintenance backup folder
+  - maintenance backup folder
 - Safety backups before cleanup:
   - `config.toml`
   - `auth.json`
@@ -25,23 +25,41 @@ It helps keep startup fast by safely backing up and trimming noisy local log dat
 - Optional proxy helper:
   - checks `127.0.0.1:7890`
   - can set user `HTTP_PROXY`, `HTTPS_PROXY`, and `ALL_PROXY` with `--fix-proxy`
-- Dry-run mode for safe previews.
+- Dry-run mode and a Windows menu launcher for safer previews.
 
 ## Quick Start
 
-Download or build `CodexMaintenance.exe`, then run:
+Download a release zip, extract it, then either double-click:
+
+```text
+CodexMaintenance-menu.cmd
+```
+
+or configure from a terminal:
 
 ```powershell
 .\CodexMaintenance.exe --configure
 ```
 
-The tool stores local settings next to the executable, or one directory above when running from a `CodexMaintenance` package folder:
+The tool stores local settings in:
 
 ```text
 CodexMaintenance.config
 ```
 
 That file is intentionally ignored by Git.
+
+## Menu Launcher
+
+`CodexMaintenance-menu.cmd` provides a simple menu:
+
+- dry-run preview
+- run cleanup with backup
+- configure folders
+- open backup folder
+- show version
+
+The menu uses relative paths, so it can be copied with the executable.
 
 ## Configuration Example
 
@@ -74,6 +92,7 @@ Options:
 --dry-run                Show actions without writing or deleting.
 --fix-proxy              Set user proxy variables if 127.0.0.1:7890 is reachable.
 --no-pause               Exit without waiting for Enter.
+--version                Show version.
 --help                   Show help.
 ```
 
@@ -86,7 +105,7 @@ Examples:
 .\CodexMaintenance.exe --fix-proxy
 ```
 
-## Build
+## Build and Package
 
 This project intentionally avoids external dependencies. On Windows, build with:
 
@@ -94,16 +113,23 @@ This project intentionally avoids external dependencies. On Windows, build with:
 .\build.ps1
 ```
 
-The script uses the .NET Framework C# compiler included with Windows when available:
+Run a smoke test:
 
-```text
-C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe
+```powershell
+.\scripts\smoke-test.ps1
+```
+
+Create a release zip:
+
+```powershell
+.\scripts\package.ps1
 ```
 
 Build output:
 
 ```text
 bin\CodexMaintenance.exe
+artifacts\CodexMaintenance-v<version>.zip
 ```
 
 ## Safety Notes
@@ -113,6 +139,11 @@ bin\CodexMaintenance.exe
 - It does not delete account credentials.
 - It does not contain personal machine paths in source code.
 - Run `--dry-run` first if you want to preview actions.
+
+More details:
+
+- [Safety model](docs/SAFETY.md)
+- [中文排错指南](docs/TROUBLESHOOTING.zh-CN.md)
 
 ## License
 

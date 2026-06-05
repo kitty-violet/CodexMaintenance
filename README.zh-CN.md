@@ -10,15 +10,15 @@
 - 想把清理前的安全备份放到其它盘。
 - 想先预览会处理什么，再决定是否正式执行。
 
-## 第一次使用
+## 快速开始
 
-打开 PowerShell 或 CMD，进入工具目录：
+下载 release 压缩包并解压后，可以直接双击：
 
-```powershell
-cd /d <你的工具目录>\CodexMaintenance
+```text
+CodexMaintenance-menu.cmd
 ```
 
-第一次建议先运行配置向导：
+也可以在 PowerShell 或 CMD 中运行配置向导：
 
 ```powershell
 .\CodexMaintenance.exe --configure
@@ -31,13 +31,23 @@ cd /d <你的工具目录>\CodexMaintenance
 3. 保留多少份维护备份。
 4. 日志数据库达到多大时才执行 `VACUUM`。
 
-配置会保存到工具旁边的本地文件：
+配置会保存到本地文件：
 
 ```text
 CodexMaintenance.config
 ```
 
 这个文件只属于你的本机，不建议上传到 GitHub。
+
+## 菜单入口
+
+`CodexMaintenance-menu.cmd` 提供一个简单菜单：
+
+- 预览清理内容，不修改文件。
+- 正式清理并创建备份。
+- 修改 Codex/备份目录配置。
+- 打开备份文件夹。
+- 查看版本号。
 
 ## 推荐使用流程
 
@@ -63,8 +73,6 @@ CodexMaintenance.config
 .\CodexMaintenance.exe --configure
 ```
 
-重新进入配置向导，修改 `Backup folder` 即可。
-
 也可以直接指定：
 
 ```powershell
@@ -75,33 +83,12 @@ CodexMaintenance.config
 
 ```powershell
 .\CodexMaintenance.exe --help
-```
-
-查看帮助。
-
-```powershell
+.\CodexMaintenance.exe --version
 .\CodexMaintenance.exe --dry-run
-```
-
-预览清理动作，不实际修改。
-
-```powershell
 .\CodexMaintenance.exe --configure
-```
-
-重新设置 `.codex` 目录和备份目录。
-
-```powershell
 .\CodexMaintenance.exe --keep-backups 10
-```
-
-保留最近 10 份维护备份。
-
-```powershell
 .\CodexMaintenance.exe --no-pause
 ```
-
-执行完后不等待回车，适合脚本调用。
 
 ## 安全说明
 
@@ -127,6 +114,19 @@ VacuumThresholdMb=20.0
 BackupRoot=D:\CodexMaintenance\backups
 ```
 
+## 构建和打包
+
+```powershell
+.\build.ps1
+.\scripts\smoke-test.ps1
+.\scripts\package.ps1
+```
+
+## 更多文档
+
+- [安全模型](docs/SAFETY.md)
+- [常见问题排查](docs/TROUBLESHOOTING.zh-CN.md)
+
 ## 开源说明
 
-这是一个本地维护工具。仓库中只应包含源码、说明文档、示例配置和构建脚本；不要提交你的真实 `CodexMaintenance.config`、备份文件、日志数据库或账号文件。
+仓库中只应包含源码、说明文档、示例配置和构建脚本；不要提交你的真实 `CodexMaintenance.config`、备份文件、日志数据库或账号文件。

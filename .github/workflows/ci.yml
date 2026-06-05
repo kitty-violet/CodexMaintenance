@@ -1,0 +1,19 @@
+﻿name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        shell: pwsh
+        run: .\build.ps1
+      - name: Smoke test
+        shell: pwsh
+        run: .\scripts\smoke-test.ps1

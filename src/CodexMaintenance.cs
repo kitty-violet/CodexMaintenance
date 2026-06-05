@@ -11,6 +11,8 @@ namespace CodexMaintenance
     internal static class Program
     {
         private const string AppName = "Codex Maintenance";
+
+        private const string Version = "1.0.2";
         private const string SettingsFileName = "CodexMaintenance.config";
         private const string DefaultProxy = "http://127.0.0.1:7890";
         private const int DefaultKeepBackups = 5;
@@ -28,9 +30,15 @@ namespace CodexMaintenance
                 return 0;
             }
 
+            if (options.ShowVersion)
+            {
+                Console.WriteLine(AppName + " " + Version);
+                return 0;
+            }
+
             try
             {
-                PrintHeader(AppName);
+                PrintHeader(AppName + " " + Version);
 
                 var settingsPath = GetSettingsPath();
                 var settings = Settings.Load(settingsPath);
@@ -524,13 +532,18 @@ namespace CodexMaintenance
             var exeDir = string.IsNullOrWhiteSpace(exePath) ? AppDomain.CurrentDomain.BaseDirectory : Path.GetDirectoryName(exePath);
             exeDir = exeDir ?? AppDomain.CurrentDomain.BaseDirectory;
 
+            var localSettings = Path.Combine(exeDir, SettingsFileName);
             var dirInfo = new DirectoryInfo(exeDir);
             if (string.Equals(dirInfo.Name, "CodexMaintenance", StringComparison.OrdinalIgnoreCase) && dirInfo.Parent != null)
             {
-                return Path.Combine(dirInfo.Parent.FullName, SettingsFileName);
+                var parentSettings = Path.Combine(dirInfo.Parent.FullName, SettingsFileName);
+                if (File.Exists(parentSettings))
+                {
+                    return parentSettings;
+                }
             }
 
-            return Path.Combine(exeDir, SettingsFileName);
+            return localSettings;
         }
 
         private static string GetDefaultBackupRoot()
@@ -595,7 +608,7 @@ namespace CodexMaintenance
 
         private static void PrintHelp()
         {
-            Console.WriteLine(AppName);
+            Console.WriteLine(AppName + " " + Version);
             Console.WriteLine();
             Console.WriteLine("Usage:");
             Console.WriteLine("  CodexMaintenance.exe [options]");
@@ -608,6 +621,8 @@ namespace CodexMaintenance
             Console.WriteLine("  --dry-run                Show actions without writing or deleting.");
             Console.WriteLine("  --fix-proxy              Set user proxy variables if 127.0.0.1:7890 is reachable.");
             Console.WriteLine("  --no-pause               Exit without waiting for Enter.");
+            Console.WriteLine("  --version                Show version.");
+
             Console.WriteLine("  --help                   Show help.");
         }
     }
@@ -615,6 +630,8 @@ namespace CodexMaintenance
     internal sealed class Options
     {
         public bool ShowHelp;
+
+        public bool ShowVersion;
         public bool Configure;
         public bool DryRun;
         public bool FixProxy;
@@ -632,6 +649,10 @@ namespace CodexMaintenance
                 if (EqualsArg(arg, "--help") || EqualsArg(arg, "-h") || EqualsArg(arg, "/?"))
                 {
                     options.ShowHelp = true;
+                }
+                else if (EqualsArg(arg, "--version") || EqualsArg(arg, "-v"))
+                {
+                    options.ShowVersion = true;
                 }
                 else if (EqualsArg(arg, "--configure"))
                 {
@@ -785,5 +806,6 @@ namespace CodexMaintenance
         }
     }
 }
+
 
 
