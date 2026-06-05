@@ -1,65 +1,152 @@
 ﻿# Codex Maintenance
 
-A small Windows maintenance utility for local Codex / Codex++ installations.
+Codex Maintenance is a small Windows utility for local Codex / Codex++ installations. It safely backs up important local files, trims noisy log data, and removes old maintenance backups so Codex startup stays lightweight.
 
-It helps keep startup fast by safely backing up and trimming noisy local log data. It is designed to be portable: users choose their own `.codex` folder and backup folder, and no personal paths are stored in source code.
+The tool is designed around four rules:
+
+1. Back up before cleanup.
+2. Preview before changing anything.
+3. Keep local configuration out of Git.
+4. Never upload secrets, credentials, logs, or backups.
 
 ## Features
 
 - First-run setup wizard for:
   - Codex data folder, usually `%USERPROFILE%\.codex`
   - maintenance backup folder
-- Safety backups before cleanup:
+  - backup retention count
+  - SQLite `VACUUM` threshold
+- Safety backup before cleanup:
   - `config.toml`
   - `auth.json`
   - `config.json`
-  - `logs_2.sqlite` plus WAL/SHM files when present
+  - `logs_2.sqlite`
+  - `logs_2.sqlite-wal`
+  - `logs_2.sqlite-shm`
 - Log database cleanup:
   - removes `TRACE`, `DEBUG`, and `INFO` rows
-  - keeps warning/error level records
+  - keeps `WARN` and `ERROR` rows
   - checkpoints WAL files
-  - runs `VACUUM` only when the database exceeds a configurable size threshold
+  - runs `VACUUM` only when the database exceeds a configurable threshold
 - Backup retention:
-  - trims old maintenance backups
+  - trims old maintenance backup folders
   - trims old Codex++ live/provider-sync backup folders
 - Optional proxy helper:
-  - checks `127.0.0.1:7890`
-  - can set user `HTTP_PROXY`, `HTTPS_PROXY`, and `ALL_PROXY` with `--fix-proxy`
-- Dry-run mode and a Windows menu launcher for safer previews.
+  - checks whether `127.0.0.1:7890` is reachable
+  - can set user-level `HTTP_PROXY`, `HTTPS_PROXY`, and `ALL_PROXY` with `--fix-proxy`
+- Dry-run mode for safe previews.
 
-## Quick Start
+## Who This Is For
 
-Download a release zip, extract it, then either double-click:
+Use this tool if:
+
+- Codex / Codex++ startup is getting slower.
+- Your `.codex` log database is getting large.
+- Codex++ backup folders are accumulating.
+- You want cleanup backups on another drive.
+- You want a simple open-source utility that is easy to audit.
+
+Do not use this tool if you expect it to manage API keys, perform GitHub uploads, log into services, or modify Codex itself. It only maintains local logs and backups.
+
+## Download
+
+Download the latest release archive:
 
 ```text
-CodexMaintenance-menu.cmd
+CodexMaintenance-v1.0.2.zip
 ```
 
-or configure from a terminal:
+After extracting it, the folder looks like this:
+
+```text
+CodexMaintenance/
+  CodexMaintenance.exe
+  CodexMaintenance.config.example
+  README.md
+  README.zh-CN.md
+  build.ps1
+  src/
+    CodexMaintenance.cs
+```
+
+## First Run
+
+Open PowerShell or CMD in the tool folder:
+
+```powershell
+cd /d <your-tool-folder>\CodexMaintenance
+```
+
+Run the setup wizard:
 
 ```powershell
 .\CodexMaintenance.exe --configure
 ```
 
-The tool stores local settings in:
+The wizard asks for:
+
+1. `Codex folder (.codex)` — usually `%USERPROFILE%\.codex`.
+2. `Backup folder` — where safety backups are stored.
+3. How many maintenance backups to keep.
+4. The database size threshold for running `VACUUM`.
+
+The local configuration is saved as:
 
 ```text
 CodexMaintenance.config
 ```
 
-That file is intentionally ignored by Git.
+This file may contain machine-local paths and should not be committed.
 
-## Menu Launcher
+## Recommended Workflow
 
-`CodexMaintenance-menu.cmd` provides a simple menu:
+### 1. Preview first
 
-- dry-run preview
-- run cleanup with backup
-- configure folders
-- open backup folder
-- show version
+```powershell
+.\CodexMaintenance.exe --dry-run
+```
 
-The menu uses relative paths, so it can be copied with the executable.
+Dry-run mode prints what would happen without copying, deleting, compacting, or modifying anything.
+
+### 2. Run cleanup
+
+```powershell
+.\CodexMaintenance.exe
+```
+
+The tool creates a timestamped backup folder before cleaning logs.
+
+Example backup folder name:
+
+```text
+20260605_184550
+```
+
+### 3. Reconfigure when needed
+
+```powershell
+.\CodexMaintenance.exe --configure
+```
+
+You can also set values directly:
+
+```powershell
+.\CodexMaintenance.exe --backup-root "D:\CodexBackups"
+.\CodexMaintenance.exe --keep-backups 10
+```
+
+## Command Reference
+
+```text
+--configure              Run setup wizard.
+--codex-home <path>      Set Codex data folder for this run and save it.
+--backup-root <path>     Set backup folder for this run and save it.
+--keep-backups <count>   Number of backup folders to keep. Default: 5.
+--dry-run                Show actions without writing or deleting.
+--fix-proxy              Set user proxy variables if 127.0.0.1:7890 is reachable.
+--no-pause               Exit without waiting for Enter.
+--help                   Show help.
+```
 
 ## Configuration Example
 
@@ -70,81 +157,101 @@ KeepBackups=5
 VacuumThresholdMb=20.0
 ```
 
-`BackupRoot=backups` keeps maintenance backups beside the local config file. You can change it to another drive, for example:
+`BackupRoot=backups` stores backups beside the local config file. You can use another drive instead:
 
 ```text
 BackupRoot=D:\CodexMaintenance\backups
 ```
 
-## Usage
+## Safety Notes
 
-```powershell
-CodexMaintenance.exe [options]
-```
+The tool may copy `auth.json` into the local backup folder, but it does not upload, print, parse, or transmit credentials.
 
-Options:
+Do not commit:
+
+- `CodexMaintenance.config`
+- `backups/`
+- `.codex/`
+- `auth.json`
+- `logs_2.sqlite`
+- `logs_2.sqlite-wal`
+- `logs_2.sqlite-shm`
+- API keys, tokens, or machine-local secret files
+
+The included `.gitignore` is configured to avoid committing these files.
+
+## What Gets Deleted
+
+The cleanup SQL removes only low-level log rows:
 
 ```text
---configure              Run setup wizard.
---codex-home <path>      Set Codex data folder for this run and save it.
---backup-root <path>     Set backup folder for this run and save it.
---keep-backups <count>   Number of backup folders to keep. Default: 5.
---dry-run                Show actions without writing or deleting.
---fix-proxy              Set user proxy variables if 127.0.0.1:7890 is reachable.
---no-pause               Exit without waiting for Enter.
---version                Show version.
---help                   Show help.
+TRACE
+DEBUG
+INFO
 ```
 
-Examples:
+It keeps higher-value rows:
+
+```text
+WARN
+ERROR
+```
+
+Before cleanup, the tool creates a safety backup. To restore, copy files from a timestamped backup folder back into your `.codex` directory.
+
+## Troubleshooting
+
+### `sqlite3.exe was not found`
+
+Install SQLite or put `sqlite3.exe` on PATH. The tool can still create backups, but log cleanup is skipped without SQLite.
+
+### Backup folder is on the wrong drive
+
+Run:
 
 ```powershell
-.\CodexMaintenance.exe --dry-run
 .\CodexMaintenance.exe --configure
-.\CodexMaintenance.exe --backup-root "D:\CodexBackups"
-.\CodexMaintenance.exe --fix-proxy
 ```
 
-## Build and Package
+Then set `Backup folder` to the desired directory.
 
-This project intentionally avoids external dependencies. On Windows, build with:
+### Should Codex be closed before cleanup?
+
+Recommended: yes. Closing Codex / Codex++ avoids SQLite lock conflicts and makes cleanup more reliable.
+
+### Does this affect API keys?
+
+No. The tool does not edit API keys or login state. It only backs up local files and cleans low-level log rows.
+
+### Does `--fix-proxy` run automatically?
+
+No. Proxy changes only happen when you explicitly pass `--fix-proxy`.
+
+## Build From Source
+
+No external NuGet packages are required.
 
 ```powershell
 .\build.ps1
 ```
 
-Run a smoke test:
+The build script uses the Windows .NET Framework C# compiler when available:
 
-```powershell
-.\scripts\smoke-test.ps1
-```
-
-Create a release zip:
-
-```powershell
-.\scripts\package.ps1
+```text
+C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe
 ```
 
 Build output:
 
 ```text
 bin\CodexMaintenance.exe
-artifacts\CodexMaintenance-v<version>.zip
 ```
 
-## Safety Notes
+## Repository Hygiene
 
-- The tool backs up important files before modifying the log database.
-- It only removes low-level log rows: `TRACE`, `DEBUG`, and `INFO`.
-- It does not delete account credentials.
-- It does not contain personal machine paths in source code.
-- Run `--dry-run` first if you want to preview actions.
-
-More details:
-
-- [Safety model](docs/SAFETY.md)
-- [中文排错指南](docs/TROUBLESHOOTING.zh-CN.md)
+Public repositories should include source, docs, example config, build scripts, and license files only. Keep real local config, backups, logs, databases, and credentials out of the repository.
 
 ## License
 
 MIT
+
