@@ -53,7 +53,7 @@ Do not use this tool if you expect it to manage API keys, perform GitHub uploads
 Download the latest release archive:
 
 ```text
-CodexMaintenance-v1.1.0.zip
+CodexMaintenance-v1.1.1.zip
 ```
 
 After extracting it, the folder looks like this:
@@ -65,6 +65,10 @@ CodexMaintenance/
   CodexMaintenance.config.example
   README.md
   README.zh-CN.md
+  assets/
+    CodexMaintenance.ico
+  scripts/
+    generate-icon.ps1
   build.ps1
   src/
     CodexMaintenance.cs
@@ -72,6 +76,28 @@ CodexMaintenance/
 ```
 
 
+
+## Portability Notes
+
+This project is not tied to one specific computer. It does not hard-code a username, drive letter, or machine-local path such as `X:\Tools`.
+
+Default behavior:
+
+- `CodexMaintenance.config` is stored beside the executable.
+- `BackupRoot=backups` stores backups beside the local config file.
+- The recommended Codex folder is `%USERPROFILE%\.codex`.
+- Users can choose any backup folder through the GUI or with `--configure`.
+
+A user can extract the tool to any folder, for example:
+
+```text
+D:\Tools\CodexMaintenance
+C:\Users\Someone\Downloads\CodexMaintenance
+```
+
+Then they can double-click `CodexMaintenanceGui.exe`.
+
+The normal requirements still apply: Windows, .NET Framework, and `sqlite3.exe` for log database cleanup. If SQLite is unavailable, the tool can still create backups but skips database cleanup.
 ## Recommended: Use the GUI
 
 The latest version includes `CodexMaintenanceGui.exe`. Double-click it to open a normal Windows desktop window instead of typing commands in a terminal.
@@ -281,6 +307,9 @@ Public repositories should include source, docs, example config, build scripts, 
 ## License
 
 MIT
+
+
+
 
 
 

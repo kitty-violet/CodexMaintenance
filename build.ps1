@@ -7,6 +7,7 @@ $guiSrc = Join-Path $srcDir "CodexMaintenanceGui.cs"
 $outDir = Join-Path $root "bin"
 $cliOut = Join-Path $outDir "CodexMaintenance.exe"
 $guiOut = Join-Path $outDir "CodexMaintenanceGui.exe"
+$icon = Join-Path $root "assets\CodexMaintenance.ico"
 
 $candidates = @(
     "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe",
@@ -25,7 +26,11 @@ if ($LASTEXITCODE -ne 0) {
     throw "CLI build failed."
 }
 
-& $csc /nologo /optimize+ /target:winexe /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /out:$guiOut $guiSrc
+if (-not (Test-Path -LiteralPath $icon)) {
+    powershell.exe -NoProfile -File (Join-Path $root "scripts\generate-icon.ps1")
+}
+
+& $csc /nologo /optimize+ /target:winexe /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /win32icon:$icon /out:$guiOut $guiSrc
 if ($LASTEXITCODE -ne 0) {
     throw "GUI build failed."
 }
@@ -35,3 +40,4 @@ Copy-Item -LiteralPath $guiOut -Destination (Join-Path $root "CodexMaintenanceGu
 
 Write-Host "Built: $cliOut"
 Write-Host "Built: $guiOut"
+

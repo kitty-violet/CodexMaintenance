@@ -60,6 +60,17 @@ namespace CodexMaintenanceGui
             BackColor = pageBackground;
             Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
             AutoScaleMode = AutoScaleMode.Dpi;
+            try
+            {
+                var appIcon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+                if (appIcon != null)
+                {
+                    Icon = appIcon;
+                }
+            }
+            catch
+            {
+            }
 
             BuildLayout();
             LoadSettings();
@@ -615,11 +626,22 @@ namespace CodexMaintenanceGui
 
         private static string ResolveConfigDirectory(string exeDirectory)
         {
+            var localConfig = Path.Combine(exeDirectory, "CodexMaintenance.config");
+            if (File.Exists(localConfig))
+            {
+                return exeDirectory;
+            }
+
             var directory = new DirectoryInfo(exeDirectory);
             if (string.Equals(directory.Name, "CodexMaintenance", StringComparison.OrdinalIgnoreCase) && directory.Parent != null)
             {
-                return directory.Parent.FullName;
+                var parentConfig = Path.Combine(directory.Parent.FullName, "CodexMaintenance.config");
+                if (File.Exists(parentConfig))
+                {
+                    return directory.Parent.FullName;
+                }
             }
+
             return exeDirectory;
         }
 
@@ -639,3 +661,5 @@ namespace CodexMaintenanceGui
         public string Output;
     }
 }
+
+
